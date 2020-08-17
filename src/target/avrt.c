@@ -168,7 +168,7 @@ static int avr_target_create(struct target *target, Jim_Interp *interp)
 
 static int avr_init_target(struct command_context *cmd_ctx, struct target *target)
 {
-	LOG_DEBUG("%s", __func__);
+	avr_build_reg_cache(target);
 	return ERROR_OK;
 }
 
