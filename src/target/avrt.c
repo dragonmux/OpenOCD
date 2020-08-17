@@ -31,6 +31,23 @@
 #define AVR_NUM_GP_REGS		32
 #define AVR_NUM_ALL_REGS	AVR_NUM_GP_REGS + 3
 
+#define AVR_JTAG_INS_PDICOM	0x7
+#define AVR_PDI_BITS		9
+#define AVR_PDI_RESET_SIG	0x59
+
+enum {
+	AVR_PDI_STCS = 0xC0,
+	AVR_PDI_BREAK = 0xBB,
+	AVR_PDI_DELAY = 0xDB,
+	AVR_PDI_EMPTY = 0xEB
+};
+
+enum {
+	AVR_PDI_REG_STATUS = 0,
+	AVR_PDI_REG_RESET = 1,
+	AVR_PDI_REG_CTRL = 2
+};
+
 /* forward declarations */
 static int avr_target_create(struct target *target, Jim_Interp *interp);
 static int avr_init_target(struct command_context *cmd_ctx, struct target *target);
