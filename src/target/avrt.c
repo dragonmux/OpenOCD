@@ -153,7 +153,6 @@ static const struct {
 	{ AVR_SREG, "sreg", 8, REG_TYPE_INT8, "system", "org.gnu.gdb.avr.system" },
 	{ AVR_SP, "sp", 16, REG_TYPE_DATA_PTR, "system", "org.gnu.gdb.avr.system" },
 	{ AVR_PC, "pc", 32, REG_TYPE_CODE_PTR, "system", "org.gnu.gdb.avr.system" },
-	{ AVR_PC, "pc2", 32, REG_TYPE_CODE_PTR, "system", "org.gnu.gdb.avr.system" },
 };
 
 static int avr_target_create(struct target *target, Jim_Interp *interp)
