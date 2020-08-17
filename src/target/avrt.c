@@ -447,9 +447,7 @@ static int mcu_write_ir(struct jtag_tap *tap, uint8_t *ir_in, uint8_t *ir_out,
 		return ERROR_FAIL;
 	}
 
-	{
-		jtag_add_plain_ir_scan(tap->ir_length, ir_out, ir_in, TAP_IDLE);
-	}
+	jtag_add_plain_ir_scan(tap->ir_length, ir_out, ir_in, TAP_IDLE);
 
 	return ERROR_OK;
 }
@@ -462,9 +460,7 @@ static int mcu_write_dr(struct jtag_tap *tap, uint8_t *dr_in, uint8_t *dr_out,
 		return ERROR_FAIL;
 	}
 
-	{
-		jtag_add_plain_dr_scan(dr_len, dr_out, dr_in, TAP_IDLE);
-	}
+	jtag_add_plain_dr_scan(dr_len, dr_out, dr_in, TAP_IDLE);
 
 	return ERROR_OK;
 }
