@@ -28,6 +28,8 @@
 #include "register.h"
 
 #define AVR_JTAG_INS_LEN	4
+#define AVR_NUM_GP_REGS		32
+#define AVR_NUM_ALL_REGS	AVR_NUM_GP_REGS + 3
 
 /* forward declarations */
 static int avr_target_create(struct target *target, Jim_Interp *interp);
@@ -225,6 +227,33 @@ static int avr_get_gdb_reg_list(struct target *target, struct reg **reg_list[],
 
 	return ERROR_OK;
 }
+
+static int avr_read_core_reg(struct reg *reg)
+{
+	struct avr_reg *avr_reg = reg->arch_info;
+	struct target *target = avr_reg->target;
+	struct avr_common *avr = target_to_avr(target);
+
+	if (target->state != TARGET_HALTED)
+		return ERROR_TARGET_NOT_HALTED;
+	return ERROR_TARGET_NOT_HALTED;
+}
+
+static int avr_write_core_reg(struct reg *reg, uint8_t *buf)
+{
+	struct avr_reg *avr_reg = reg->arch_info;
+	struct target *target = avr_reg->target;
+	struct avr_common *avr = target_to_avr(target);
+
+	if (target->state != TARGET_HALTED)
+		return ERROR_TARGET_NOT_HALTED;
+	return ERROR_TARGET_NOT_HALTED;
+}
+
+static const struct reg_arch_type avr_reg_type = {
+	.get = avr_read_core_reg,
+	.set = avr_write_core_reg,
+};
 
 static struct reg_cache *avr_build_reg_cache(struct target *target)
 {
