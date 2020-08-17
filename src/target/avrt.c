@@ -79,6 +79,53 @@ struct target_type avr_target = {
 	.init_target = avr_init_target,
 };
 
+static const struct {
+	unsigned id;
+	const char *name;
+	unsigned bits;
+	enum reg_type type;
+	const char *group;
+	const char *feature;
+} avr_regs[] = {
+	{ AVR_R0, "r0", 8, REG_TYPE_INT8, "general", "org.gnu.gdb.avr.cpu" },
+	{ AVR_R1, "r1", 8, REG_TYPE_INT8, "general", "org.gnu.gdb.avr.cpu" },
+	{ AVR_R2, "r2", 8, REG_TYPE_INT8, "general", "org.gnu.gdb.avr.cpu" },
+	{ AVR_R3, "r3", 8, REG_TYPE_INT8, "general", "org.gnu.gdb.avr.cpu" },
+	{ AVR_R4, "r4", 8, REG_TYPE_INT8, "general", "org.gnu.gdb.avr.cpu" },
+	{ AVR_R5, "r5", 8, REG_TYPE_INT8, "general", "org.gnu.gdb.avr.cpu" },
+	{ AVR_R6, "r6", 8, REG_TYPE_INT8, "general", "org.gnu.gdb.avr.cpu" },
+	{ AVR_R7, "r7", 8, REG_TYPE_INT8, "general", "org.gnu.gdb.avr.cpu" },
+	{ AVR_R8, "r8", 8, REG_TYPE_INT8, "general", "org.gnu.gdb.avr.cpu" },
+	{ AVR_R9, "r9", 8, REG_TYPE_INT8, "general", "org.gnu.gdb.avr.cpu" },
+	{ AVR_R10, "r10", 8, REG_TYPE_INT8, "general", "org.gnu.gdb.avr.cpu" },
+	{ AVR_R11, "r11", 8, REG_TYPE_INT8, "general", "org.gnu.gdb.avr.cpu" },
+	{ AVR_R12, "r12", 8, REG_TYPE_INT8, "general", "org.gnu.gdb.avr.cpu" },
+	{ AVR_R13, "r13", 8, REG_TYPE_INT8, "general", "org.gnu.gdb.avr.cpu" },
+	{ AVR_R14, "r14", 8, REG_TYPE_INT8, "general", "org.gnu.gdb.avr.cpu" },
+	{ AVR_R15, "r15", 8, REG_TYPE_INT8, "general", "org.gnu.gdb.avr.cpu" },
+	{ AVR_R16, "r16", 8, REG_TYPE_INT8, "general", "org.gnu.gdb.avr.cpu" },
+	{ AVR_R17, "r17", 8, REG_TYPE_INT8, "general", "org.gnu.gdb.avr.cpu" },
+	{ AVR_R18, "r18", 8, REG_TYPE_INT8, "general", "org.gnu.gdb.avr.cpu" },
+	{ AVR_R19, "r19", 8, REG_TYPE_INT8, "general", "org.gnu.gdb.avr.cpu" },
+	{ AVR_R20, "r20", 8, REG_TYPE_INT8, "general", "org.gnu.gdb.avr.cpu" },
+	{ AVR_R21, "r21", 8, REG_TYPE_INT8, "general", "org.gnu.gdb.avr.cpu" },
+	{ AVR_R22, "r22", 8, REG_TYPE_INT8, "general", "org.gnu.gdb.avr.cpu" },
+	{ AVR_R23, "r23", 8, REG_TYPE_INT8, "general", "org.gnu.gdb.avr.cpu" },
+	{ AVR_R24, "r24", 8, REG_TYPE_INT8, "general", "org.gnu.gdb.avr.cpu" },
+	{ AVR_R25, "r25", 8, REG_TYPE_INT8, "general", "org.gnu.gdb.avr.cpu" },
+	{ AVR_R26, "r26", 8, REG_TYPE_INT8, "general", "org.gnu.gdb.avr.cpu" },
+	{ AVR_R27, "r27", 8, REG_TYPE_INT8, "general", "org.gnu.gdb.avr.cpu" },
+	{ AVR_R28, "r28", 8, REG_TYPE_INT8, "general", "org.gnu.gdb.avr.cpu" },
+	{ AVR_R29, "r29", 8, REG_TYPE_INT8, "general", "org.gnu.gdb.avr.cpu" },
+	{ AVR_R30, "r30", 8, REG_TYPE_INT8, "general", "org.gnu.gdb.avr.cpu" },
+	{ AVR_R31, "r31", 8, REG_TYPE_INT8, "general", "org.gnu.gdb.avr.cpu" },
+
+	{ AVR_SREG, "sreg", 8, REG_TYPE_INT8, "system", "org.gnu.gdb.avr.system" },
+	{ AVR_SP, "sp", 16, REG_TYPE_DATA_PTR, "system", "org.gnu.gdb.avr.system" },
+	{ AVR_PC, "pc", 32, REG_TYPE_CODE_PTR, "system", "org.gnu.gdb.avr.system" },
+	{ AVR_PC, "pc2", 32, REG_TYPE_CODE_PTR, "system", "org.gnu.gdb.avr.system" },
+};
+
 static int avr_target_create(struct target *target, Jim_Interp *interp)
 {
 	struct avr_common *avr = calloc(1, sizeof(struct avr_common));

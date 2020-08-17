@@ -21,6 +21,51 @@
 
 #include <jtag/jtag.h>
 
+enum {
+	AVR_R0,
+	AVR_R1,
+	AVR_R2,
+	AVR_R3,
+	AVR_R4,
+	AVR_R5,
+	AVR_R6,
+	AVR_R7,
+	AVR_R8,
+	AVR_R9,
+	AVR_R10,
+	AVR_R11,
+	AVR_R12,
+	AVR_R13,
+	AVR_R14,
+	AVR_R15,
+	AVR_R16,
+	AVR_R17,
+	AVR_R18,
+	AVR_R19,
+	AVR_R20,
+	AVR_R21,
+	AVR_R22,
+	AVR_R23,
+	AVR_R24,
+	AVR_R25,
+	AVR_R26,
+	AVR_R27,
+	AVR_R28,
+	AVR_R29,
+	AVR_R30,
+	AVR_R31,
+	AVR_R32,
+
+	AVR_SREG,
+	AVR_SP,
+	AVR_PC,
+
+	AVR_REG_W,
+	AVR_REG_X,
+	AVR_REG_Y,
+	AVR_REG_Z,
+};
+
 struct mcu_jtag {
 	struct jtag_tap *tap;
 };
