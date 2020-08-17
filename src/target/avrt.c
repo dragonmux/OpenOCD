@@ -63,6 +63,14 @@ static int avr_step(struct target *target, int current, target_addr_t address,
 static int avr_assert_reset(struct target *target);
 static int avr_deassert_reset(struct target *target);
 
+static int avr_pdi_read(struct jtag_tap *tap, const uint8_t insn, void *buffer, const uint8_t bytes);
+static int avr_pdi_write(struct jtag_tap *tap, const uint8_t insn, void *buffer, const uint8_t bytes);
+
+static int avr_get_gdb_reg_list(struct target *target, struct reg **reg_list[],
+		int *reg_list_size, enum target_register_class reg_class);
+
+static struct reg_cache *avr_build_reg_cache(struct target *target);
+
 /* IR and DR functions */
 static int mcu_write_ir(struct jtag_tap *tap, uint8_t *ir_in, uint8_t *ir_out, int ir_len, int rti);
 static int mcu_write_dr(struct jtag_tap *tap, uint8_t *dr_in, uint8_t *dr_out, int dr_len, int rti);
@@ -212,6 +220,106 @@ static int avr_deassert_reset(struct target *target)
 
 	LOG_DEBUG("%s", __func__);
 	return ERROR_OK;
+}
+
+static inline uint8_t avr_pdi_parity(const uint8_t value)
+	{ return __builtin_popcount(value) & 1U; }
+
+static void avr_jtag_enter_pdi(struct jtag_tap *tap)
+{
+	struct scan_field field;
+	uint8_t instr = AVR_JTAG_INS_PDICOM;
+
+	field.num_bits = tap->ir_length;
+	field.out_value = &instr;
+	field.in_value = NULL;
+	jtag_add_ir_scan(tap, &field, TAP_IDLE);
+}
+
+static int avr_pdi_read_byte(struct jtag_tap *tap, uint8_t *data)
+{
+	struct scan_field field;
+	uint8_t pdiInsn[2];
+	uint8_t pdiData[2];
+
+	field.num_bits = AVR_PDI_BITS;
+	field.out_value = pdiInsn;
+	pdiInsn[0] = AVR_PDI_DELAY;
+	pdiInsn[1] = avr_pdi_parity(AVR_PDI_DELAY);
+	field.out_value = pdiData;
+
+	while (pdiData[0] == AVR_PDI_DELAY)
+	{
+		jtag_add_dr_scan(tap, 1, &field, TAP_IDLE);
+		int result = jtag_execute_queue();
+		if (result != ERROR_OK)
+			return result;
+
+		if (pdiData[0] == AVR_PDI_EMPTY || pdiData[0] == AVR_PDI_BREAK)
+			break;
+		else if (pdiData[0] != AVR_PDI_DELAY && pdiData[1] != avr_pdi_parity(pdiData[0])) {
+			LOG_ERROR("parity error while executing PDI command");
+			return ERROR_FAIL;
+		}
+	}
+
+	*data = pdiData[0];
+	return ERROR_OK;
+}
+
+static int avr_pdi_read(struct jtag_tap *tap, const uint8_t insn, void *buffer, const uint8_t bytes)
+{
+	struct scan_field field;
+	uint8_t pdiInsn[2];
+	uint8_t *result = buffer;
+
+	avr_jtag_enter_pdi(tap);
+
+	field.num_bits = AVR_PDI_BITS;
+	field.out_value = pdiInsn;
+	pdiInsn[0] = insn;
+	pdiInsn[1] = avr_pdi_parity(insn);
+	field.in_value = NULL;
+	jtag_add_dr_scan(tap, 1, &field, TAP_IDLE);
+
+	uint8_t count = 0;
+	do
+	{
+		uint8_t data = 0;
+		if (avr_pdi_read_byte(tap, &data) != ERROR_OK) {
+			LOG_ERROR("unable to complete AVR PDI read");
+			return ERROR_FAIL;
+		}
+		result[count++] = data;
+	}
+	while (count < bytes);
+
+	return ERROR_OK;
+}
+
+static int avr_pdi_write(struct jtag_tap *tap, const uint8_t insn, void *buffer, const uint8_t bytes)
+{
+	struct scan_field field;
+	uint8_t pdiInsn[2];
+	uint8_t *result = buffer;
+
+	avr_jtag_enter_pdi(tap);
+
+	field.num_bits = AVR_PDI_BITS;
+	field.out_value = pdiInsn;
+	pdiInsn[0] = insn;
+	pdiInsn[1] = avr_pdi_parity(insn);
+	field.in_value = NULL;
+	jtag_add_dr_scan(tap, 1, &field, TAP_IDLE);
+
+	for (uint8_t i = 0; i < bytes; ++i)
+	{
+		pdiInsn[0] = result[i];
+		pdiInsn[1] = avr_pdi_parity(insn);
+		jtag_add_dr_scan(tap, 1, &field, TAP_IDLE);
+	}
+
+	return jtag_execute_queue();
 }
 
 int avr_jtag_senddat(struct jtag_tap *tap, uint32_t *dr_in, uint32_t dr_out,
