@@ -208,17 +208,29 @@ static int avr_step(struct target *target, int current, target_addr_t address, i
 
 static int avr_assert_reset(struct target *target)
 {
-	target->state = TARGET_RESET;
+	struct jtag_tap *tap = target->tap;
+	uint8_t data = AVR_PDI_RESET_SIG;
 
-	LOG_DEBUG("%s", __func__);
+	if (avr_pdi_write(tap, AVR_PDI_STCS | AVR_PDI_REG_RESET, &data, 1) != ERROR_OK) {
+		LOG_ERROR("Failed to reset device");
+		return ERROR_FAIL;
+	}
+
+	target->state = TARGET_RESET;
 	return ERROR_OK;
 }
 
 static int avr_deassert_reset(struct target *target)
 {
-	target->state = TARGET_RUNNING;
+	struct jtag_tap *tap = target->tap;
+	uint8_t data = 0;
 
-	LOG_DEBUG("%s", __func__);
+	if (avr_pdi_write(tap, AVR_PDI_STCS | AVR_PDI_REG_RESET, &data, 1) != ERROR_OK) {
+		LOG_ERROR("Failed to reset device");
+		return ERROR_FAIL;
+	}
+
+	target->state = TARGET_RUNNING;
 	return ERROR_OK;
 }
 
