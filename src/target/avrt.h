@@ -19,7 +19,10 @@
 #ifndef OPENOCD_TARGET_AVRT_H
 #define OPENOCD_TARGET_AVRT_H
 
+#include <stdint.h>
 #include <jtag/jtag.h>
+#include "target.h"
+#include "register.h"
 
 enum {
 	AVR_R0,
@@ -72,11 +75,24 @@ struct mcu_jtag {
 
 struct avr_common {
 	struct mcu_jtag jtag_info;
+	struct reg_cache *core_cache;
+};
+
+struct avr_reg {
+	int num;
+	struct target *target;
+	struct avr_common *avr;
 };
 
 int mcu_execute_queue(void);
 int avr_jtag_sendinstr(struct jtag_tap *tap, uint8_t *ir_in, uint8_t ir_out);
 int avr_jtag_senddat(struct jtag_tap *tap, uint32_t *dr_in, uint32_t dr_out,
 		int len);
+
+static inline struct avr_common *
+target_to_avr(struct target *target)
+{
+	return (struct avr_common *)target->arch_info;
+}
 
 #endif /* OPENOCD_TARGET_AVRT_H */

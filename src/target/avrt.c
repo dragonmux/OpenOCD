@@ -23,6 +23,7 @@
 #include "avrt.h"
 #include "target.h"
 #include "target_type.h"
+#include "register.h"
 
 #define AVR_JTAG_INS_LEN	4
 
@@ -59,9 +60,9 @@ struct target_type avr_target = {
 
 	.assert_reset = avr_assert_reset,
 	.deassert_reset = avr_deassert_reset,
-/*
-	.get_gdb_reg_list = avr_get_gdb_reg_list,
 
+	.get_gdb_reg_list = avr_get_gdb_reg_list,
+/*
 	.read_memory = avr_read_memory,
 	.write_memory = avr_write_memory,
 	.bulk_write_memory = avr_bulk_write_memory,
@@ -201,6 +202,80 @@ int avr_jtag_senddat(struct jtag_tap *tap, uint32_t *dr_in, uint32_t dr_out,
 int avr_jtag_sendinstr(struct jtag_tap *tap, uint8_t *ir_in, uint8_t ir_out)
 {
 	return mcu_write_ir_u8(tap, ir_in, ir_out, AVR_JTAG_INS_LEN, 1);
+}
+
+static int avr_get_gdb_reg_list(struct target *target, struct reg **reg_list[],
+		int *reg_list_size, enum target_register_class reg_class)
+{
+	struct avr_common *avr = target_to_avr(target);
+	int i;
+
+	if (reg_class == REG_CLASS_ALL)
+		*reg_list_size = AVR_NUM_ALL_REGS;
+	else
+		*reg_list_size = AVR_NUM_GP_REGS;
+	*reg_list = malloc(sizeof(struct reg *) * *reg_list_size);
+	if (*reg_list == NULL)
+		return ERROR_FAIL;
+
+	for (i = 0; i < *reg_list_size; i++)
+		(*reg_list)[i] = &avr->core_cache->reg_list[i];
+
+	return ERROR_OK;
+}
+
+static struct reg_cache *avr_build_reg_cache(struct target *target)
+{
+	struct avr_common *avr = target_to_avr(target);
+	struct reg_cache *cache = malloc(sizeof(struct reg_cache));
+	struct reg *reg_list = calloc(AVR_NUM_ALL_REGS, sizeof(struct reg));
+	struct avr_reg *arch_info = calloc(AVR_NUM_ALL_REGS, sizeof(struct avr_reg));
+	struct reg_feature *feature;
+	struct reg_data_type *data_type;
+	int i;
+
+	cache->name = "avr registers";
+	cache->next = NULL;
+	cache->reg_list = reg_list;
+	cache->num_regs = AVR_NUM_ALL_REGS;
+	*register_get_last_cache_p(&target->reg_cache) = cache;
+
+	for (i = 0; i < AVR_NUM_ALL_REGS; i++) {
+		arch_info[i].num = avr_regs[i].id;
+		arch_info[i].target = target;
+		arch_info[i].avr = avr;
+
+		reg_list[i].name = avr_regs[i].name;
+		reg_list[i].size = avr_regs[i].bits;
+		size_t storage_size = DIV_ROUND_UP(avr_regs[i].bits, 8);
+		reg_list[i].value = calloc(1, storage_size);
+		reg_list[i].dirty = 0;
+		reg_list[i].valid = 0;
+		reg_list[i].type = &avr_reg_type;
+		reg_list[i].arch_info = &arch_info[i];
+
+		reg_list[i].group = avr_regs[i].group;
+		reg_list[i].number = i;
+		reg_list[i].exist = true;
+		reg_list[i].caller_save = true;
+
+		feature = calloc(1, sizeof(struct reg_feature));
+		if (feature) {
+			feature->name = avr_regs[i].feature;
+			reg_list[i].feature = feature;
+		} else
+			LOG_ERROR("unable to allocate feature list");
+
+		data_type = calloc(1, sizeof(struct reg_data_type));
+		if (data_type) {
+			data_type->type = avr_regs[i].type;
+			reg_list[i].reg_data_type = data_type;
+		} else
+			LOG_ERROR("unable to allocate reg type list");
+	}
+
+	avr->core_cache = cache;
+	return cache;
 }
 
 /* IR and DR functions */
