@@ -182,8 +182,8 @@ static int avr_arch_state(struct target *target)
 
 static int avr_poll(struct target *target)
 {
-	if ((target->state == TARGET_RUNNING) || (target->state == TARGET_DEBUG_RUNNING))
-		target->state = TARGET_HALTED;
+	/*if ((target->state == TARGET_RUNNING) || (target->state == TARGET_DEBUG_RUNNING))
+		target->state = TARGET_HALTED;*/
 
 	LOG_DEBUG("%s", __func__);
 	return ERROR_OK;
