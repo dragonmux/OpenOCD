@@ -39,6 +39,14 @@
 #define AVR_PDI_RESET_SIG	0x59
 
 enum {
+	AVR_PDI_BYTE = 0x00,
+	AVR_PDI_WORD = 0x01,
+	AVR_PDI_SWORD = 0x02,
+	AVR_PDI_DWORD = 0x03,
+	AVR_PDI_LDS = 0x00,
+	AVR_PDI_LD = 0x20,
+	AVR_PDI_STS = 0x40,
+	AVR_PDI_ST = 0x60,
 	AVR_PDI_STCS = 0xC0,
 	AVR_PDI_BREAK = 0xBB,
 	AVR_PDI_DELAY = 0xDB,
@@ -50,6 +58,9 @@ enum {
 	AVR_PDI_REG_RESET = 1,
 	AVR_PDI_REG_CTRL = 2
 };
+
+#define AVR_REG_SP		0x1000003D
+#define AVR_REG_SREG	0x1000003F
 
 /* forward declarations */
 static int avr_target_create(struct target *target, Jim_Interp *interp);
@@ -404,9 +415,38 @@ static int avr_read_core_reg(struct reg *reg)
 	struct avr_reg *avr_reg = reg->arch_info;
 	struct target *target = avr_reg->target;
 	struct avr_common *avr = target_to_avr(target);
+	struct jtag_tap *tap = target->tap;
+	uint32_t num = avr_reg->num;
+	int retval;
 
 	if (target->state != TARGET_HALTED)
 		return ERROR_TARGET_NOT_HALTED;
+
+	switch (num) {
+		case AVR_PC:
+			break;
+		case AVR_SP:
+		{
+			const uint32_t address = AVR_REG_SP;
+			uint8_t *const value = reg->value;
+			if ((retval = avr_pdi_write(tap, AVR_PDI_LDS | (AVR_PDI_DWORD << 2) | AVR_PDI_WORD,
+					&address, sizeof(address))) != ERROR_OK ||
+				(retval = avr_pdi_read_byte(tap, value + 0)) != ERROR_OK ||
+				(retval = avr_pdi_read_byte(tap, value + 1)) != ERROR_OK)
+				return retval;
+			// TODO: endian swap the result..
+			return ERROR_OK;
+		}
+		case AVR_SREG:
+		{
+			uint32_t address = AVR_REG_SREG;
+			if ((retval = avr_pdi_write(tap, AVR_PDI_LDS | (AVR_PDI_DWORD << 2) | AVR_PDI_BYTE,
+				&address, sizeof(address))) != ERROR_OK)
+				return retval;
+			return avr_pdi_read_byte(tap, reg->value);
+		}
+	}
+
 	return ERROR_TARGET_NOT_HALTED;
 }
 
