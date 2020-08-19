@@ -281,13 +281,17 @@ static void avr_jtag_enter_pdi(struct jtag_tap *tap)
 static int avr_pdi_read_byte(struct jtag_tap *tap, uint8_t *data)
 {
 	struct scan_field field;
+#if 0
 	uint8_t pdiInsn[2];
-	uint8_t pdiData[2];
+#endif
+	uint8_t pdiData[2] = {0, 0};
 
 	field.num_bits = AVR_PDI_BITS;
-	field.out_value = pdiInsn;
+	field.out_value = NULL;
+#if 0
 	pdiInsn[0] = AVR_PDI_DELAY;
 	pdiInsn[1] = avr_pdi_parity(AVR_PDI_DELAY);
+#endif
 	field.out_value = pdiData;
 
 	while (pdiData[0] == AVR_PDI_DELAY)
