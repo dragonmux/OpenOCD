@@ -67,7 +67,7 @@ static int avr_assert_reset(struct target *target);
 static int avr_deassert_reset(struct target *target);
 
 static int avr_pdi_read(struct jtag_tap *tap, const uint8_t insn, void *buffer, const uint8_t bytes);
-static int avr_pdi_write(struct jtag_tap *tap, const uint8_t insn, void *buffer, const uint8_t bytes);
+static int avr_pdi_write(struct jtag_tap *tap, const uint8_t insn, const void *buffer, const uint8_t bytes);
 
 static int avr_get_gdb_reg_list(struct target *target, struct reg **reg_list[],
 		int *reg_list_size, enum target_register_class reg_class);
@@ -337,11 +337,11 @@ static int avr_pdi_read(struct jtag_tap *tap, const uint8_t insn, void *buffer, 
 	return ERROR_OK;
 }
 
-static int avr_pdi_write(struct jtag_tap *tap, const uint8_t insn, void *buffer, const uint8_t bytes)
+static int avr_pdi_write(struct jtag_tap *tap, const uint8_t insn, const void *const buffer, const uint8_t bytes)
 {
 	struct scan_field field;
 	uint8_t pdiInsn[2];
-	uint8_t *result = buffer;
+	const uint8_t *const result = buffer;
 
 	avr_jtag_enter_pdi(tap);
 
