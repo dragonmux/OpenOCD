@@ -32,6 +32,9 @@
 #define AVR_NUM_ALL_REGS	AVR_NUM_GP_REGS + 3
 
 #define AVR_JTAG_INS_PDICOM	0x7
+#define AVR_JTAG_INS_HALT	0x8
+#define AVR_JTAG_INS_RUN	0x9
+#define AVR_JTAG_INS_OCDCOM	0xB
 #define AVR_PDI_BITS		9
 #define AVR_PDI_RESET_SIG	0x59
 
@@ -188,14 +191,40 @@ static int avr_poll(struct target *target)
 
 static int avr_halt(struct target *target)
 {
-	LOG_DEBUG("%s", __func__);
+	struct jtag_tap *tap = target->tap;
+	struct scan_field field;
+	uint8_t instr = AVR_JTAG_INS_HALT;
+
+	field.num_bits = tap->ir_length;
+	field.out_value = &instr;
+	field.in_value = NULL;
+	jtag_add_ir_scan(tap, &field, TAP_IDLE);
+
+	const int result = jtag_execute_queue();
+	if (result != ERROR_OK)
+		return result;
+
+	target->state = TARGET_HALTED;
 	return ERROR_OK;
 }
 
 static int avr_resume(struct target *target, int current, target_addr_t address,
 		int handle_breakpoints, int debug_execution)
 {
-	LOG_DEBUG("%s", __func__);
+	struct jtag_tap *tap = target->tap;
+	struct scan_field field;
+	uint8_t instr = AVR_JTAG_INS_RUN;
+
+	field.num_bits = tap->ir_length;
+	field.out_value = &instr;
+	field.in_value = NULL;
+	jtag_add_ir_scan(tap, &field, TAP_IDLE);
+
+	const int result = jtag_execute_queue();
+	if (result != ERROR_OK)
+		return result;
+
+	target->state = TARGET_RUNNING;
 	return ERROR_OK;
 }
 
