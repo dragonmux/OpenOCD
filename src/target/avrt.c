@@ -239,9 +239,10 @@ static int avr_assert_reset(struct target *target)
 	struct jtag_tap *tap = target->tap;
 	uint8_t data = AVR_PDI_RESET_SIG;
 
-	if (avr_pdi_write(tap, AVR_PDI_STCS | AVR_PDI_REG_RESET, &data, 1) != ERROR_OK) {
+	const int result = avr_pdi_write(tap, AVR_PDI_STCS | AVR_PDI_REG_RESET, &data, 1);
+	if (result != ERROR_OK) {
 		LOG_ERROR("Failed to reset device");
-		return ERROR_FAIL;
+		return result;
 	}
 
 	target->state = TARGET_RESET;
@@ -253,9 +254,10 @@ static int avr_deassert_reset(struct target *target)
 	struct jtag_tap *tap = target->tap;
 	uint8_t data = 0;
 
-	if (avr_pdi_write(tap, AVR_PDI_STCS | AVR_PDI_REG_RESET, &data, 1) != ERROR_OK) {
+	const int result = avr_pdi_write(tap, AVR_PDI_STCS | AVR_PDI_REG_RESET, &data, 1);
+	if (result != ERROR_OK) {
 		LOG_ERROR("Failed to reset device");
-		return ERROR_FAIL;
+		return result;
 	}
 
 	target->state = TARGET_RUNNING;
